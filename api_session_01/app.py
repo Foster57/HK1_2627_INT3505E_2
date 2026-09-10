@@ -1,4 +1,4 @@
-# app.py – Bài 1: Hello API
+
 from flask import Flask
 
 app = Flask(__name__)
