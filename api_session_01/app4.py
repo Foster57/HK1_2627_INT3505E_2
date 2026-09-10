@@ -8,6 +8,10 @@ ORDERS = {
     "3": {"id": "3", "product_id": 12, "quantity": 8, "status": "delivered"},
 }
 
+@app.route("/orders", methods=["GET"])
+def get_orders():
+    return jsonify(ORDERS)
+
 
 @app.route("/orders/<order_id>", methods=["DELETE"])
 def delete_order(order_id):
