@@ -18,3 +18,7 @@
 ![Bài 6 - 2](B6(2).png)
 ![Bài 6 - 3](B6(3).png)
 ![Bài 6 - 4](B6(4).png)
+
+# Yêu cầu 1 : Tìm hiểu 3 API thật viết về một domain quan tâm 
+GitHub REST API là REST API, cụ thể là một Web API sử dụng HTTP/HTTPS.
+
