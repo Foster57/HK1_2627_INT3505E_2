@@ -1,4 +1,10 @@
 .venv/
+venv/
 __pycache__/
 get-pip.py
 *.pyc
+*.py[cod]
+*$py.class
+.DS_Store
+.idea/
+.vscode/
