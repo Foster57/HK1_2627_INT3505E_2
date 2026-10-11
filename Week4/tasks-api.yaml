@@ -1,0 +1,422 @@
+openapi: 3.0.3
+
+info:
+  title: Tasks API
+  version: 1.0.0
+  description: >
+    API quản lý công việc (Tasks) nội bộ.
+    Hỗ trợ tạo, đọc, cập nhật và xóa công việc.
+    Tất cả các endpoint đều yêu cầu xác thực Bearer JWT.
+
+servers:
+  - url: http://localhost:5000/v1
+    description: Local development server
+
+tags:
+  - name: Tasks
+    description: Quản lý công việc (CRUD)
+
+security:
+  - BearerAuth: []
+
+paths:
+  /tasks:
+    get:
+      summary: Lấy danh sách công việc
+      description: >
+        Trả về danh sách công việc. Hỗ trợ lọc theo `status` và giới hạn
+        số lượng kết quả bằng `limit`.
+      operationId: listTasks
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/PageLimit'
+      responses:
+        '200':
+          description: Danh sách công việc trả về thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    post:
+      summary: Tạo công việc mới
+      description: Tạo một công việc mới với `title` là trường bắt buộc.
+      operationId: createTask
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskInput'
+      responses:
+        '201':
+          description: Công việc được tạo thành công
+          headers:
+            Location:
+              description: URI của công việc vừa tạo
+              schema:
+                type: string
+                example: /v1/tasks/3fa85f64-5717-4562-b3fc-2c963f66afa6
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+
+    get:
+      summary: Lấy thông tin một công việc
+      description: Trả về thông tin chi tiết của công việc theo UUID.
+      operationId: getTaskById
+      tags:
+        - Tasks
+      responses:
+        '200':
+          description: Thông tin công việc
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Cập nhật một phần công việc
+      description: >
+        Cập nhật một hoặc nhiều trường của công việc.
+        Trường `id` không được phép thay đổi.
+      operationId: patchTask
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskInput'
+      responses:
+        '200':
+          description: Công việc sau khi cập nhật
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    delete:
+      summary: Xóa công việc
+      description: Xóa công việc theo UUID. Không có response body khi thành công.
+      operationId: deleteTask
+      tags:
+        - Tasks
+      responses:
+        '204':
+          description: Xóa thành công, không có nội dung trả về
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Xác thực bằng Bearer Token.
+        Token demo dùng để kiểm thử: `demo-bearer-token-week4`.
+        Thêm vào header: `Authorization: Bearer demo-bearer-token-week4`
+
+  parameters:
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      description: UUID định danh duy nhất của công việc
+      schema:
+        type: string
+        format: uuid
+        example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+    StatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Lọc công việc theo trạng thái
+      schema:
+        type: string
+        enum:
+          - open
+          - done
+        example: open
+
+    PageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Số lượng kết quả tối đa trả về (1–100, mặc định 20)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+
+  schemas:
+
+    Task:
+      type: object
+      description: Thông tin đầy đủ của một công việc
+      required:
+        - id
+        - title
+        - status
+        - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: UUID định danh duy nhất, được tạo tự động
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        title:
+          type: string
+          description: Tên công việc
+          example: Thiết kế API specification cho Tasks
+        status:
+          type: string
+          description: Trạng thái công việc
+          enum:
+            - open
+            - done
+          default: open
+          example: open
+        priority:
+          type: string
+          description: Mức độ ưu tiên
+          enum:
+            - low
+            - normal
+            - high
+          default: normal
+          example: high
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Ngày đến hạn (YYYY-MM-DD)
+          example: "2026-10-20"
+        assigneeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID của người được giao công việc
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+    CreateTaskInput:
+      type: object
+      description: Dữ liệu để tạo công việc mới
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Tên công việc (bắt buộc, không được để trống)
+          example: Thiết lập CI/CD pipeline
+        status:
+          type: string
+          enum:
+            - open
+            - done
+          default: open
+          description: Trạng thái ban đầu (mặc định open)
+          example: open
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+          default: normal
+          description: Mức độ ưu tiên (mặc định normal)
+          example: high
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Ngày đến hạn (YYYY-MM-DD)
+          example: "2026-10-30"
+        assigneeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID của người được giao công việc
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+    UpdateTaskInput:
+      type: object
+      description: >
+        Dữ liệu để cập nhật một phần công việc.
+        Trường `id` không được phép thay đổi.
+        Chỉ cần truyền những trường muốn cập nhật.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Tên công việc mới (không được để trống nếu truyền)
+          example: Hoàn thiện tài liệu API
+        status:
+          type: string
+          enum:
+            - open
+            - done
+          description: Trạng thái mới
+          example: done
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+          description: Mức độ ưu tiên mới
+          example: normal
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Ngày đến hạn mới (YYYY-MM-DD)
+          example: "2026-11-05"
+        assigneeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID của người được giao mới
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+
+    TaskPage:
+      type: object
+      description: Kết quả trả về khi lấy danh sách công việc
+      properties:
+        data:
+          type: array
+          description: Danh sách công việc trong trang hiện tại
+          items:
+            $ref: '#/components/schemas/Task'
+        total:
+          type: integer
+          description: Số lượng công việc thực tế trong kết quả trả về
+          example: 3
+
+    Error:
+      type: object
+      description: Cấu trúc lỗi chuẩn theo RFC 7807 (Problem Details for HTTP APIs)
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          description: URI định danh loại lỗi
+          example: about:blank
+        title:
+          type: string
+          description: Tên ngắn gọn mô tả loại lỗi
+          example: Task not found
+        status:
+          type: integer
+          description: HTTP status code
+          example: 404
+        detail:
+          type: string
+          description: Mô tả chi tiết lỗi cụ thể
+          example: "Task 3fa85f64-5717-4562-b3fc-2c963f66afa6 does not exist"
+        instance:
+          type: string
+          description: Đường dẫn của request gây ra lỗi
+          example: /v1/tasks/3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+  responses:
+
+    Unauthorized:
+      description: Thiếu hoặc sai Bearer Token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: "about:blank"
+            title: "Unauthorized"
+            status: 401
+            detail: "Missing or invalid Authorization header. Use: Authorization: Bearer <token>"
+            instance: "/v1/tasks"
+
+    NotFound:
+      description: Không tìm thấy công việc với taskId chỉ định
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: "about:blank"
+            title: "Task not found"
+            status: 404
+            detail: "Task 3fa85f64-5717-4562-b3fc-2c963f66afa6 does not exist"
+            instance: "/v1/tasks/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    UnsupportedMediaType:
+      description: Content-Type không phải application/json
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: "about:blank"
+            title: "Unsupported Media Type"
+            status: 415
+            detail: "Content-Type must be application/json"
+            instance: "/v1/tasks"
+
+    UnprocessableEntity:
+      description: Dữ liệu đầu vào không hợp lệ
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: "about:blank"
+            title: "Validation error"
+            status: 422
+            detail: "title is required"
+            instance: "/v1/tasks"
+
