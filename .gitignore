@@ -8,3 +8,5 @@ get-pip.py
 .DS_Store
 .idea/
 .vscode/
+*.db
+

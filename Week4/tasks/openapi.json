@@ -1,0 +1,666 @@
+{
+  "paths": {
+    "/tasks/": {
+      "get": {
+        "responses": {
+          "500": {
+            "description": "Lỗi xử lý nội bộ phía máy chủ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Tham số truy vấn lọc/phân trang không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Lấy danh sách công việc thành công kèm con trỏ phân trang",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "summary": "Lấy danh sách công việc (Hỗ trợ lọc & Keyset Cursor Pagination)",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "responses": {
+          "422": {
+            "$ref": "#/components/responses/UNPROCESSABLE_ENTITY"
+          },
+          "500": {
+            "description": "Lỗi máy chủ khi ghi dữ liệu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu payload gửi lên vi phạm quy tắc validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Tạo mới công việc thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "requestBody": {
+          "description": "Dữ liệu công việc cần khởi tạo",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskInput"
+              }
+            }
+          }
+        },
+        "summary": "Tạo mới một công việc",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks": {
+      "get": {
+        "responses": {
+          "500": {
+            "description": "Lỗi xử lý nội bộ phía máy chủ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Tham số truy vấn lọc/phân trang không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Lấy danh sách công việc thành công kèm con trỏ phân trang",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "summary": "Lấy danh sách công việc (Hỗ trợ lọc & Keyset Cursor Pagination)",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "responses": {
+          "422": {
+            "$ref": "#/components/responses/UNPROCESSABLE_ENTITY"
+          },
+          "500": {
+            "description": "Lỗi máy chủ khi ghi dữ liệu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu payload gửi lên vi phạm quy tắc validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Tạo mới công việc thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "requestBody": {
+          "description": "Dữ liệu công việc cần khởi tạo",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskInput"
+              }
+            }
+          }
+        },
+        "summary": "Tạo mới một công việc",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "responses": {
+          "500": {
+            "description": "Lỗi máy chủ khi đọc cơ sở dữ liệu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy ID công việc yêu cầu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Trả về thông tin chi tiết của công việc",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "summary": "Xem chi tiết công việc theo ID",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "patch": {
+        "responses": {
+          "422": {
+            "$ref": "#/components/responses/UNPROCESSABLE_ENTITY"
+          },
+          "500": {
+            "description": "Lỗi máy chủ khi cập nhật dữ liệu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy ID công việc để cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payload rỗng hoặc giá trị trường không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Cập nhật thành công và trả về dữ liệu mới nhất",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "requestBody": {
+          "description": "Các trường thông tin cần cập nhật một phần",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskUpdate"
+              }
+            }
+          }
+        },
+        "summary": "Cập nhật một phần thông tin công việc (Partial Update)",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "delete": {
+        "responses": {
+          "500": {
+            "description": "Lỗi máy chủ khi xóa bản ghi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy ID công việc để xóa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Xóa công việc thành công (Không trả về nội dung)"
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "summary": "Xóa một công việc theo ID",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "task_id",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      ]
+    }
+  },
+  "info": {
+    "title": "Tasks Management API",
+    "version": "v1"
+  },
+  "tags": [
+    {
+      "name": "tasks",
+      "description": "Tập hợp các API quản lý công việc (Tasks Management)"
+    }
+  ],
+  "openapi": "3.0.3",
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Error code"
+          },
+          "status": {
+            "type": "string",
+            "description": "Error name"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "errors": {
+            "type": "object",
+            "description": "Errors",
+            "additionalProperties": {}
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaginationMetadata": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Total number of items."
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Total number of pages."
+          },
+          "first_page": {
+            "type": "integer",
+            "description": "First available page number."
+          },
+          "last_page": {
+            "type": "integer",
+            "description": "Last available page number."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page number."
+          },
+          "previous_page": {
+            "type": "integer",
+            "description": "Previous page number."
+          },
+          "next_page": {
+            "type": "integer",
+            "description": "Next page number."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "URI định danh loại lỗi",
+            "example": "https://httpstatuses.com/404"
+          },
+          "title": {
+            "type": "string",
+            "description": "Tiêu đề ngắn gọn mô tả loại lỗi",
+            "example": "Not Found"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Mã trạng thái HTTP tương ứng",
+            "example": 404
+          },
+          "detail": {
+            "type": "string",
+            "description": "Mô tả cụ thể về sự cố xảy ra cho request này",
+            "example": "Không tìm thấy task với ID được cung cấp."
+          },
+          "instance": {
+            "type": "string",
+            "description": "URI endpoint đã kích hoạt lỗi",
+            "example": "/tasks/99"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Mã định danh duy nhất của request phục vụ tra cứu log",
+            "example": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+          }
+        },
+        "required": [
+          "status",
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Mã định danh duy nhất của task (khóa chính tự tăng)",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Tiêu đề tóm tắt nội dung công việc",
+            "example": "Triển khai xác thực JWT cho API Gateway"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in_progress",
+              "done",
+              "cancelled"
+            ],
+            "description": "Trạng thái thực hiện (todo, in_progress, done, cancelled)",
+            "example": "in_progress"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "urgent"
+            ],
+            "description": "Mức độ ưu tiên công việc (low, medium, high, urgent)",
+            "example": "high"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Hạn hoàn thành công việc theo chuẩn ISO 8601 (YYYY-MM-DD)",
+            "example": "2026-03-31"
+          },
+          "assignedID": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Mã ID nhân viên chịu trách nhiệm xử lý task",
+            "example": 101
+          }
+        },
+        "required": [
+          "assignedID",
+          "dueDate",
+          "priority",
+          "status",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "TaskList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "Danh sách các công việc trong trang hiện tại",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "description": "Con trỏ opaque Base64 dùng để lấy trang tiếp theo (None nếu là trang cuối)",
+            "example": "eyJzb3J0IjoiaWQiLCJ2YWx1ZSI6MTAsImlkIjoxMH0",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Đánh dấu còn dữ liệu ở các trang sau hay không",
+            "example": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TaskInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Tiêu đề bắt buộc của task mới",
+            "example": "Xây dựng tài liệu OpenAPI cho module Đơn hàng"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in_progress",
+              "done",
+              "cancelled"
+            ],
+            "description": "Trạng thái ban đầu của task",
+            "example": "todo"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "urgent"
+            ],
+            "description": "Độ ưu tiên công việc",
+            "example": "medium"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Hạn chót hoàn thành (YYYY-MM-DD)",
+            "example": "2026-04-15"
+          },
+          "assignedID": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "ID người được phân công",
+            "example": 102
+          }
+        },
+        "required": [
+          "assignedID",
+          "dueDate",
+          "priority",
+          "status",
+          "title"
+        ]
+      },
+      "TaskUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Tiêu đề cập nhật"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in_progress",
+              "done",
+              "cancelled"
+            ],
+            "description": "Trạng thái cập nhật"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "urgent"
+            ],
+            "description": "Mức ưu tiên cập nhật"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Hạn hoàn thành mới (YYYY-MM-DD)"
+          },
+          "assignedID": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "ID người được chuyển giao công việc"
+          }
+        }
+      }
+    },
+    "responses": {
+      "DEFAULT_ERROR": {
+        "description": "Default error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "UNPROCESSABLE_ENTITY": {
+        "description": "Unprocessable Entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

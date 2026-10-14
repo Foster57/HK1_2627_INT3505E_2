@@ -1,207 +1,271 @@
-# Tasks API — Quản lý công việc nội bộ
+# Tuần 4: Thiết kế Đặc tả API (OpenAPI 3.0 & Swagger) và Triển khai Dịch vụ
 
-## 1. Giới thiệu
-
-Dự án xây dựng **Tasks API** — một REST API quản lý công việc nội bộ sử dụng Flask (Python), tuân thủ chuẩn **OpenAPI 3.0.3** và các nguyên tắc thiết kế RESTful.
-
-Hệ thống hỗ trợ đầy đủ các thao tác CRUD với công việc, xác thực thông qua **Bearer Token**, phản hồi lỗi chuẩn hóa theo **RFC 7807 (Problem Details)**, cùng giao diện tài liệu tương tác **Swagger UI** tích hợp sẵn.
+Báo cáo bài tập môn **Kiến trúc Hướng Dịch vụ (SOA / API Design and Implementation)**. Dự án tập trung vào việc thiết kế đặc tả RESTful API chuẩn hóa theo chuẩn quốc tế **OpenAPI Specification (OAS 3.0.3)**, xử lý lỗi theo **RFC 7807 (Problem Details)** và xây dựng ứng dụng mẫu với kiến trúc phân tầng chuyên nghiệp sử dụng **Flask-Smorest**, **Marshmallow** và **SQLite**.
 
 ---
 
-## 2. Công nghệ sử dụng
+## Mục lục
 
-| Công nghệ | Mục đích |
-| :--- | :--- |
-| **Python 3.10+** | Ngôn ngữ lập trình chính |
-| **Flask 3.x** | Web framework xử lý định tuyến và REST API |
-| **PyYAML** | Đọc và chuyển đổi file đặc tả `tasks-api.yaml` |
-| **OpenAPI 3.0.3** | Chuẩn mô tả API specification |
-| **Swagger UI 5** | Giao diện web trực quan hóa tài liệu và thử nghiệm API |
-| **RFC 7807** | Chuẩn định dạng chi tiết lỗi (`application/problem+json`) |
+1. [Tổng quan nội dung](#1-tổng-quan-nội-dung)
+2. [Cấu trúc cây thư mục](#2-cấu-trúc-cây-thư-mục)
+3. [Kiến trúc phân tầng (Layered Architecture)](#3-kiến-trúc-phân-tầng-layered-architecture)
+4. [Bài 1: Đặc tả Petstore API (Swagger Editor)](#4-bài-1-đặc-tả-petstore-api-swagger-editor)
+5. [Bài 2: Hệ thống Quản lý Công việc Nội bộ (Tasks API)](#5-bài-2-hệ-thống-quản-lý-công-việc-nội-bộ-tasks-api)
+   - [5.1. Mô hình thực thể Task](#51-mô-hình-thực-thể-task)
+   - [5.2. Danh sách 5 Endpoints](#52-danh-sách-5-endpoints)
+   - [5.3. Kỹ thuật phân trang con trỏ (Keyset Cursor Pagination)](#53-kỹ-thuật-phân-trang-con-trỏ-keyset-cursor-pagination)
+   - [5.4. Chuẩn hóa phản hồi lỗi theo RFC 7807](#54-chuẩn-hóa-phản-hồi-lỗi-theo-rfc-7807)
+6. [Hướng dẫn cài đặt và vận hành](#6-hướng-dẫn-cài-đặt-và-vận-hành)
+7. [Kịch bản kiểm thử mẫu với cURL](#7-kịch-bản-kiểm-thử-mẫu-với-curl)
 
 ---
 
-## 3. Cấu trúc thư mục
+## 1. Tổng quan nội dung
+
+Tuần 4 giải quyết hai bài toán cốt lõi trong thiết kế giao tiếp dịch vụ:
+
+- **Bài 1 — Petstore API Specification**: Xây dựng file đặc tả OpenAPI 3.0.3 cho dịch vụ quản lý thú cưng, chuẩn hóa toàn diện schema dữ liệu, các mã phản hồi HTTP (`200`, `201`, `204`, `400`, `404`, `500`) và cấu trúc lỗi RFC 7807 (`application/problem+json`).
+- **Bài 2 — Tasks API Implementation**: Thiết kế hợp đồng API và hiện thực hóa dịch vụ quản lý công việc nội bộ bằng Python (Flask-Smorest), áp dụng kiến trúc phân tầng (Clean / Layered Architecture) tách biệt giữa Controller/Route, Service Logic, Data Repository và Database. Hệ thống hỗ trợ phân trang hiệu năng cao dạng Keyset Cursor Pagination, tự động sinh tài liệu Swagger UI và OpenAPI Specification.
+
+---
+
+## 2. Cấu trúc cây thư mục
 
 ```text
 Week4/
-├── app.py             # Triển khai Flask API (CRUD, Auth, Swagger UI, /openapi.json, redirect /)
-├── tasks-api.yaml     # File đặc tả OpenAPI 3.0.3 hoàn chỉnh
-├── requirements.txt   # Danh sách thư viện phụ thuộc (flask, pyyaml)
-├── README.md          # Tài liệu hướng dẫn dự án
-└── Result_img/        # Hình ảnh kết quả chạy và kiểm thử giao diện
-    ├── Test1.png      # Tổng quan giao diện Swagger Editor / Swagger UI và các endpoint
-    └── Test2.png      # Chi tiết endpoint GET /tasks và các mã phản hồi 200, 401, 422
+├── petstore/
+│   ├── pestore.yaml               # File đặc tả OpenAPI 3.0.3 cho Petstore API
+│   └── petstore.yaml              # Bản sao chuẩn hóa tên gọi tiện tra cứu
+│
+├── tasks/                         # Ứng dụng Tasks API theo kiến trúc phân tầng
+│   ├── app.py                     # Entrypoint khởi tạo Flask app & Swagger UI
+│   ├── openapi.json               # OpenAPI Specification tự sinh (JSON format)
+│   ├── taskApi.yaml               # OpenAPI Specification viết tay chuẩn xác (YAML)
+│   ├── SwaggerUI.pdf              # Tài liệu minh họa kiểm thử qua Swagger UI
+│   └── src/
+│       ├── database/
+│       │   ├── schemas.sql        # Kịch bản DDL tạo bảng tasks, index & seed data
+│       │   └── tasks_db.py        # Module quản lý kết nối SQLite & hàm init_db()
+│       ├── handlers/
+│       │   └── exception.py       # Ngoại lệ ApiProblem & bộ bắt lỗi toàn cục RFC 7807
+│       ├── repositories/
+│       │   └── tasks_repo.py      # Tầng truy xuất CSDL (CRUD & Keyset query)
+│       ├── routes/
+│       │   └── tasks.py           # Presentation layer (Flask-Smorest Blueprint & MethodView)
+│       ├── schemas/
+│       │   ├── exception.py       # Marshmallow schema cho ProblemDetails (RFC 7807)
+│       │   └── tasks.py           # Marshmallow schemas: Task, TaskInput, TaskUpdate, TaskList
+│       └── services/
+│           └── tasks_service.py   # Business logic: validate, phân trang cursor, serialize
+│
+├── requirements.txt               # Danh sách thư viện phụ thuộc
+└── README.md                      # Báo cáo tổng quan dự án và hướng dẫn sử dụng
 ```
 
 ---
 
-## 4. Hướng dẫn cài đặt và chạy
+## 3. Kiến trúc phân tầng (Layered Architecture)
 
-### Bước 1: Cài đặt thư viện
+Mã nguồn dịch vụ Tasks API được tổ chức theo mô hình phân tách trách nhiệm (Separation of Concerns):
+
+```mermaid
+graph TD
+    Client["Client / Swagger UI"] -->|"HTTP Request"| App["app.py (Flask + Smorest)"]
+    App --> Routes["src/routes/tasks.py (Endpoints / MethodView)"]
+    
+    subgraph Validation & Serialization
+        Routes <--> Schemas["src/schemas/tasks.py & exception.py"]
+    end
+    
+    Routes --> Services["src/services/tasks_service.py (Business Logic)"]
+    
+    subgraph Error Handling
+        Services -.->|"Raise ApiProblem"| Handlers["src/handlers/exception.py"]
+        Handlers -->|"application/problem+json"| Client
+    end
+    
+    Services --> Repos["src/repositories/tasks_repo.py (Data Access)"]
+    Repos --> DB["src/database/tasks_db.py (SQLite)"]
+    DB --> SQLite[("tasks.db")]
+```
+
+- **Routes (`src/routes`)**: Tiếp nhận request HTTP, kiểm tra hợp lệ kiểu dữ liệu bằng schema, gọi sang Service tương ứng và trả về phản hồi mã HTTP.
+- **Schemas (`src/schemas`)**: Định nghĩa hợp đồng dữ liệu thông qua thư viện `marshmallow`, hỗ trợ xác thực đầu vào và định dạng đầu ra.
+- **Services (`src/services`)**: Xử lý logic nghiệp vụ, giải mã/mã hóa con trỏ phân trang (Cursor), lọc và sắp xếp.
+- **Repositories (`src/repositories`)**: Trừu tượng hóa các câu lệnh SQL (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) với tham số hóa (Parameterized Queries) chống SQL Injection.
+- **Database (`src/database`)**: Kết nối tới file SQLite, thiết lập các chỉ mục (Indexes) nhằm tăng tốc độ truy vấn.
+- **Handlers (`src/handlers`)**: Bắt mọi ngoại lệ và định dạng cấu trúc lỗi thống nhất theo RFC 7807.
+
+---
+
+## 4. Bài 1: Đặc tả Petstore API (Swagger Editor)
+
+Tập tin đặc tả: [`petstore/pestore.yaml`](file:///c:/Users/Dang%20Tran%20Tien/OneDrive/Desktop/Week3/Week4/petstore/pestore.yaml)
+
+File đặc tả tuân thủ **OpenAPI 3.0.3**, bao gồm các tài nguyên chính:
+
+| HTTP Method | Endpoint | Mô tả | Mã phản hồi |
+|:---:|:---|:---|:---:|
+| `GET` | `/pets` | Lấy danh sách thú cưng (hỗ trợ query `limit`, `tag`) | `200`, `400`, `500` |
+| `POST` | `/pets` | Tạo mới thú cưng với payload `NewPet` | `201`, `400`, `500` |
+| `GET` | `/pets/{petId}` | Xem chi tiết thông tin thú cưng theo ID | `200`, `400`, `404`, `500` |
+| `DELETE` | `/pets/{petId}` | Xóa vĩnh viễn thú cưng khỏi hệ thống | `204`, `404`, `500` |
+
+Tất cả các mã lỗi `4xx` và `5xx` đều tham chiếu tới component `#/components/schemas/Error` theo đúng chuẩn Problem Details RFC 7807 (`application/problem+json`).
+
+---
+
+## 5. Bài 2: Hệ thống Quản lý Công việc Nội bộ (Tasks API)
+
+### 5.1. Mô hình thực thể Task
+
+Bản ghi công việc nội bộ bao gồm 6 trường dữ liệu cốt lõi:
+
+| Trường | Kiểu dữ liệu | Bắt buộc | Ràng buộc / Định dạng | Ví dụ |
+|:---|:---:|:---:|:---|:---|
+| `id` | Integer | Tự sinh | Khóa chính tự tăng (`PRIMARY KEY AUTOINCREMENT`) | `1` |
+| `title` | String | Có | Chiều dài từ 1 đến 255 ký tự | `"Triển khai xác thực JWT"` |
+| `status` | String | Có | Enum: `todo`, `in_progress`, `done`, `cancelled` | `"in_progress"` |
+| `priority` | String | Có | Enum: `low`, `medium`, `high`, `urgent` | `"high"` |
+| `dueDate` | Date | Có | Định dạng chuẩn ISO-8601 `YYYY-MM-DD` | `"2026-03-31"` |
+| `assignedID` | Integer | Có | Số nguyên dương định danh nhân viên phụ trách | `101` |
+
+---
+
+### 5.2. Danh sách 5 Endpoints
+
+Tất cả các endpoint đều có tiền tố `/tasks`:
+
+| Phương thức | Đường dẫn | Chức năng chi tiết | Trạng thái thành công |
+|:---:|:---|:---|:---:|
+| `GET` | `/tasks` | Lấy danh sách công việc có lọc đa điều kiện và phân trang con trỏ | `200 OK` |
+| `POST` | `/tasks` | Tạo mới công việc với đầy đủ các trường bắt buộc | `201 Created` |
+| `GET` | `/tasks/{task_id}` | Xem chi tiết một công việc theo mã `task_id` | `200 OK` |
+| `PATCH` | `/tasks/{task_id}` | Cập nhật từng phần (Partial Update) các trường gửi lên | `200 OK` |
+| `DELETE` | `/tasks/{task_id}` | Xóa công việc khỏi CSDL | `204 No Content` |
+
+---
+
+### 5.3. Kỹ thuật phân trang con trỏ (Keyset Cursor Pagination)
+
+Thay vì sử dụng phân trang truyền thống `OFFSET / LIMIT` (vốn gây suy giảm hiệu năng $O(N)$ khi dữ liệu lớn và dễ bị trùng/nhảy bản ghi khi có thêm/xóa dữ liệu), dịch vụ sử dụng **Keyset Pagination**:
+
+1. **Cấu trúc Cursor**: Là một chuỗi Base64 (URL-safe) chứa thông tin của bản ghi cuối cùng của trang trước:
+   ```json
+   {
+     "sort": "id",
+     "val": "10",
+     "id": 10
+   }
+   ```
+2. **Cơ chế truy vấn**: Khi client gửi `cursor=eyJzb3J0IjoiaWQiLCJ2YWwiOiIxMCIsImlkIjoxMH0`, hệ thống giải mã và chèn điều kiện lọc tối ưu chỉ mục:
+   ```sql
+   WHERE (id > 10) ORDER BY id ASC LIMIT 11;
+   ```
+3. **Phản hồi**: Trường `next_cursor` sẽ trả về `null` khi đã duyệt hết toàn bộ dữ liệu (`has_more = false`).
+
+---
+
+### 5.4. Chuẩn hóa phản hồi lỗi theo RFC 7807
+
+Tất cả các lỗi trả về từ API đều có Header `Content-Type: application/problem+json` với cấu trúc JSON chuẩn mực:
+
+```json
+{
+  "type": "https://httpstatuses.com/404",
+  "title": "Task Not Found",
+  "status": 404,
+  "detail": "Không tìm thấy công việc với ID = 999.",
+  "instance": "/tasks/999",
+  "trace_id": "4a25c77c-a49e-4ff6-9b51-3801f9bb9739"
+}
+```
+
+- `type`: URI phân loại định danh lỗi.
+- `title`: Tóm tắt ngắn gọn loại sự cố.
+- `status`: Mã trạng thái HTTP.
+- `detail`: Diễn giải nguyên nhân sự cố cụ thể cho người dùng/lập trình viên.
+- `instance`: Đường dẫn API xảy ra lỗi.
+- `trace_id`: Mã UUID hỗ trợ tra cứu nhật ký (log tracing) trên hệ thống.
+
+---
+
+## 6. Hướng dẫn cài đặt và vận hành
+
+### Bước 1: Chuẩn bị môi trường & cài đặt thư viện
+
+Yêu cầu **Python 3.10+**. Cài đặt các gói phụ thuộc cần thiết:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Bước 2: Chạy ứng dụng
+### Bước 2: Khởi động máy chủ API
+
+Bạn có thể chạy trực tiếp từ thư mục `Week4`:
 
 ```bash
+python -m tasks.app
+```
+
+*Hoặc di chuyển vào thư mục `tasks` để chạy:*
+
+```bash
+cd tasks
 python app.py
 ```
 
-Server sẽ khởi động tại: `http://localhost:5000` (hoặc `http://127.0.0.1:5000`).
+Khi khởi động lần đầu, hệ thống sẽ **tự động kiểm tra và tạo cơ sở dữ liệu SQLite** `tasks/src/database/tasks.db` kèm 15 bản ghi mẫu phong phú.
 
-- Khi truy cập địa chỉ gốc `http://localhost:5000/`, hệ thống sẽ tự động chuyển hướng (`302 Redirect`) về giao diện **Swagger UI** tại `http://localhost:5000/docs`.
+### Bước 3: Trải nghiệm Swagger UI
 
----
-
-## 5. Hình ảnh kết quả chạy thử nghiệm (Result Images)
-
-### 5.1. Tổng quan giao diện Swagger UI & Tài liệu OpenAPI (`Test1.png`)
-
-Giao diện hiển thị thông tin tổng quan của Tasks API phiên bản `1.0.0 (OAS 3.0)`:
-- **Server:** `http://localhost:5000/v1` (Local development server).
-- **Cơ chế bảo mật:** Nút **Authorize** kích hoạt xác thực Bearer JWT trên toàn bộ endpoint.
-- **5 Endpoint CRUD:** Đầy đủ các phương thức HTTP chuẩn (`GET`, `POST`, `GET {taskId}`, `PATCH {taskId}`, `DELETE {taskId}`).
-- **Schemas:** Mô hình dữ liệu chuẩn hóa (`Task`, `CreateTaskInput`, `UpdateTaskInput`, `TaskPage`, `Error`).
-
-![Swagger UI Overview](./Result_img/Test1.png)
+- **Giao diện Swagger UI tương tác**: Mở trình duyệt tại [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs) (Hệ thống tự động chuyển hướng nếu truy cập trang chủ `http://127.0.0.1:5000/`).
+- **OpenAPI Schema (JSON)**: [http://127.0.0.1:5000/openapi.json](http://127.0.0.1:5000/openapi.json).
 
 ---
 
-### 5.2. Chi tiết tương tác endpoint `GET /tasks` (`Test2.png`)
+## 7. Kịch bản kiểm thử mẫu với cURL
 
-Khi mở chi tiết endpoint `GET /tasks` (truy cập tại `http://127.0.0.1:5000/docs#/Tasks/listTasks`):
-- **Tham số truy vấn (Query Parameters):**
-  - `status`: Lọc công việc theo trạng thái (`open` hoặc `done`).
-  - `limit`: Giới hạn số lượng bản ghi trả về (từ 1 đến 100, mặc định là 20).
-- **Tính năng Try it out:** Cho phép người dùng nhập tham số và gửi request trực tiếp từ trình duyệt.
-- **Phản hồi chuẩn hóa (Responses):**
-  - `200 OK`: Danh sách công việc định dạng `application/json` bao gồm mảng `data` và tổng số `total`.
-  - `401 Unauthorized`: Lỗi thiếu hoặc sai Bearer Token với mã lỗi và thông điệp chuẩn RFC 7807 (`application/problem+json`).
-  - `422 Unprocessable Entity`: Lỗi tham số không hợp lệ (ví dụ: `status` không thuộc enum hoặc `limit` vượt ngưỡng).
-
-![Swagger UI Detail Test](./Result_img/Test2.png)
-
----
-
-## 6. Danh sách 5 endpoint
-
-| Method | Endpoint | Mô tả | Yêu cầu Bearer Token |
-| :---: | :--- | :--- | :---: |
-| `GET` | `/v1/tasks` | Lấy danh sách công việc, hỗ trợ lọc `status` và phân trang `limit` | ✅ |
-| `POST` | `/v1/tasks` | Tạo công việc mới (`title` bắt buộc) | ✅ |
-| `GET` | `/v1/tasks/{taskId}` | Lấy thông tin chi tiết một công việc theo UUID | ✅ |
-| `PATCH` | `/v1/tasks/{taskId}` | Cập nhật một phần công việc (không cho sửa `id`) | ✅ |
-| `DELETE` | `/v1/tasks/{taskId}` | Xóa công việc, trả về `204 No Content` | ✅ |
-
-*(Hệ thống hỗ trợ cả tiền tố `/v1/tasks` và `/tasks` tương thích với cấu hình Base URL trên Swagger UI)*.
-
-### Cấu trúc dữ liệu Task
-
-| Trường | Kiểu dữ liệu | Bắt buộc | Mô tả |
-| :--- | :--- | :---: | :--- |
-| `id` | UUID (string) | Có (hệ thống tự sinh) | Định danh duy nhất của task |
-| `title` | string | Có | Tên công việc (không được rỗng) |
-| `status` | `open` \| `done` | Không | Trạng thái công việc (mặc định: `open`) |
-| `priority` | `low` \| `normal` \| `high` | Không | Mức độ ưu tiên (mặc định: `normal`) |
-| `dueDate` | Date (`YYYY-MM-DD`) | Không | Ngày hết hạn |
-| `assigneeId` | UUID (string) | Không | ID người được giao việc |
-
----
-
-## 7. Truy cập Swagger UI và OpenAPI Specification
-
-| Đường dẫn | Mô tả chức năng |
-| :--- | :--- |
-| `http://localhost:5000/` | Tự động chuyển hướng đến `/docs` |
-| `http://localhost:5000/docs` | Giao diện tương tác Swagger UI |
-| `http://localhost:5000/openapi.json` | Cung cấp tài liệu OpenAPI dưới dạng JSON |
-
----
-
-## 8. Xác thực Bearer Token
-
-Tất cả các endpoint API đều được bảo vệ bởi cơ chế xác thực Bearer Token qua header `Authorization`.
-
-**Token demo dùng để kiểm thử:**
-```text
-demo-bearer-token-week4
-```
-
-### Cách xác thực trên Swagger UI:
-1. Nhấn nút **Authorize** (biểu tượng ổ khóa màu xanh lá ở góc phải trên).
-2. Nhập `demo-bearer-token-week4` vào ô `Value`.
-3. Nhấn nút **Authorize**, sau đó bấm **Close**.
-4. Các biểu tượng ổ khóa cạnh các endpoint sẽ chuyển sang trạng thái đã khóa, cho phép thực thi request thành công.
-
----
-
-## 9. Ví dụ cURL kiểm thử trực tiếp
-
+#### 1. Lấy trang đầu tiên (5 công việc, lọc trạng thái `in_progress`):
 ```bash
-# Thiết lập biến môi trường
-TOKEN="demo-bearer-token-week4"
-BASE="http://localhost:5000/v1"
-
-# 1. Lấy danh sách công việc (GET 200)
-curl -H "Authorization: Bearer $TOKEN" "$BASE/tasks"
-
-# 2. Lọc theo trạng thái và giới hạn kết quả (GET 200)
-curl -H "Authorization: Bearer $TOKEN" "$BASE/tasks?status=open&limit=5"
-
-# 3. Tạo công việc mới (POST 201)
-curl -X POST "$BASE/tasks" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Thiết kế API Spec","status":"open","priority":"high","dueDate":"2026-10-20","assigneeId":"a1b2c3d4-e5f6-7890-abcd-ef1234567890"}'
-
-# 4. Lấy chi tiết công việc theo ID (thay <taskId> bằng ID thực tế)
-curl -H "Authorization: Bearer $TOKEN" "$BASE/tasks/<taskId>"
-
-# 5. Cập nhật một phần công việc (PATCH 200)
-curl -X PATCH "$BASE/tasks/<taskId>" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"status":"done","priority":"normal"}'
-
-# 6. Xóa công việc (DELETE 204)
-curl -X DELETE -H "Authorization: Bearer $TOKEN" "$BASE/tasks/<taskId>"
-
-# 7. Kiểm thử lỗi 401 khi không gửi token
-curl http://localhost:5000/v1/tasks
-
-# 8. Kiểm thử lỗi 422 khi thiếu tiêu đề (title)
-curl -X POST "$BASE/tasks" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"status":"open"}'
+curl -X GET "http://127.0.0.1:5000/tasks?limit=5&status=in_progress" -H "Accept: application/json"
 ```
 
----
-
-## 10. Kiểm tra tính hợp lệ của OpenAPI Specification
-
-**Cách 1 — Kiểm tra trực tuyến trên Swagger Editor:**
-1. Mở trang [https://editor.swagger.io/](https://editor.swagger.io/).
-2. Sao chép và dán toàn bộ nội dung file `tasks-api.yaml` vào khung soạn thảo bên trái.
-3. Kết quả hiển thị đúng chuẩn OAS 3.0 không có cảnh báo lỗi cú pháp như trong ảnh `Test1.png`.
-
-**Cách 2 — Kiểm tra bằng Spectral Linter:**
+#### 2. Lấy trang kế tiếp sử dụng `cursor`:
 ```bash
-npx @stoplight/spectral-cli lint tasks-api.yaml
+curl -X GET "http://127.0.0.1:5000/tasks?limit=5&cursor=<NEXT_CURSOR_STRING>" -H "Accept: application/json"
 ```
 
----
+#### 3. Tạo mới một công việc:
+```bash
+curl -X POST "http://127.0.0.1:5000/tasks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Tích hợp xác thực OAuth2 cho hệ thống",
+    "status": "todo",
+    "priority": "high",
+    "dueDate": "2026-04-30",
+    "assignedID": 102
+  }'
+```
 
-## 11. Các trường hợp thiết kế gắn liền với ảnh
+#### 4. Cập nhật một phần (PATCH):
+```bash
+curl -X PATCH "http://127.0.0.1:5000/tasks/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "done",
+    "priority": "urgent"
+  }'
+```
 
-### Trường hợp 1: Cấu trúc Schemas và Xác thực Bearer JWT (minh họa ở ảnh `Test1.png`)
-- **Tách biệt Schema Input và Output:** Schema `Task` trả về đầy đủ kèm `id`, trong khi `CreateTaskInput` và `UpdateTaskInput` loại bỏ trường `id` để ngăn client can thiệp vào mã định danh tự sinh.
-- **Bảo mật toàn cục:** Tích hợp `securitySchemes` dạng Bearer JWT, kích hoạt nút **Authorize** và biểu tượng khóa bảo vệ cho toàn bộ 5 endpoint CRUD.
+#### 5. Xóa công việc:
+```bash
+curl -X DELETE "http://127.0.0.1:5000/tasks/1" -i
+```
+*(Kết quả trả về HTTP 204 No Content)*
 
-### Trường hợp 2: Lọc dữ liệu và Chuẩn hóa lỗi RFC 7807 (minh họa ở ảnh `Test2.png`)
-- **Xử lý tham số truy vấn:** Endpoint `GET /tasks` hỗ trợ lọc theo `status` (`open`, `done`) và giới hạn số lượng `limit` (từ 1 đến 100, mặc định 20) trực tiếp qua giao diện tương tác.
-- **Phản hồi lỗi chuẩn RFC 7807:** Tất cả các lỗi (`401`, `422`, `404`, `415`) đều trả về định dạng `application/problem+json` với cấu trúc đồng nhất gồm `type`, `title`, `status`, `detail`, `instance`.
-
+#### 6. Kiểm tra phản hồi lỗi chuẩn RFC 7807 (khi truy vấn ID không tồn tại):
+```bash
+curl -X GET "http://127.0.0.1:5000/tasks/99999" -i
+```

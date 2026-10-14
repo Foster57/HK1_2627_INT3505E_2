@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: Internal Task Management API
+  description: >-
+    Đặc tả RESTful API quản lý công việc nội bộ (Tasks Management).
+    Cung cấp các thao tác CRUD, phân trang bằng con trỏ (Keyset Cursor Pagination),
+    lọc dữ liệu theo nhiều tiêu chí, và cấu trúc phản hồi lỗi chuẩn RFC 7807 (Problem Details).
+  version: 1.0.0
+  contact:
+    name: Core API Engineering Team
+    email: engineering@company.internal
+
+servers:
+  - url: http://127.0.0.1:5000
+    description: Máy chủ thử nghiệm cục bộ (Flask Local Server)
+
+tags:
+  - name: tasks
+    description: Quản lý vòng đời công việc nội bộ
+
+paths:
+  /tasks:
+    get:
+      tags:
+        - tasks
+      summary: Lấy danh sách công việc
+      description: >-
+        Truy vấn danh sách công việc có hỗ trợ phân trang dạng con trỏ (Keyset Cursor Pagination),
+        sắp xếp linh hoạt và lọc theo trạng thái, mức độ ưu tiên hoặc nhân viên được phân công.
+      operationId: listTasks
+      parameters:
+        - name: limit
+          in: query
+          description: Số lượng bản ghi tối đa trên một trang (từ 1 đến 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+        - name: sort
+          in: query
+          description: >-
+            Trường dùng để sắp xếp. Thêm dấu '-' phía trước để xếp giảm dần (ví dụ: '-id', 'dueDate').
+          required: false
+          schema:
+            type: string
+            enum: [id, -id, title, -title, status, -status, priority, -priority, dueDate, -dueDate, assignedID, -assignedID]
+            default: id
+            example: id
+        - name: status
+          in: query
+          description: Lọc theo trạng thái công việc
+          required: false
+          schema:
+            type: string
+            enum: [todo, in_progress, done, cancelled]
+            example: in_progress
+        - name: priority
+          in: query
+          description: Lọc theo mức độ ưu tiên
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+            example: high
+        - name: assignedID
+          in: query
+          description: Lọc theo mã nhân viên được phân công công việc
+          required: false
+          schema:
+            type: integer
+            example: 101
+        - name: cursor
+          in: query
+          description: Chuỗi con trỏ Base64 được cung cấp từ trường next_cursor của trang trước đó
+          required: false
+          schema:
+            type: string
+            example: eyJzb3J0IjoiaWQiLCJ2YWwiOiIxMCIsImlkIjoxMH0
+      responses:
+        '200':
+          description: Truy vấn danh sách công việc thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+        '400':
+          description: Tham số truy vấn hoặc chuỗi cursor không hợp lệ (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Lỗi máy chủ nội bộ (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - tasks
+      summary: Tạo mới một công việc
+      description: Thêm mới một bản ghi công việc vào cơ sở dữ liệu.
+      operationId: createTask
+      requestBody:
+        description: Thông tin chi tiết của công việc cần tạo
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Khởi tạo công việc thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Dữ liệu payload không hợp lệ hoặc thiếu trường bắt buộc
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Lỗi máy chủ khi lưu trữ dữ liệu
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{taskId}:
+    get:
+      tags:
+        - tasks
+      summary: Xem chi tiết một công việc
+      description: Trả về thông tin đầy đủ của một công việc theo mã taskId.
+      operationId: getTaskById
+      parameters:
+        - name: taskId
+          in: path
+          description: Mã định danh công việc (Khóa chính)
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Lấy thông tin công việc thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Không tìm thấy công việc với ID tương ứng
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Lỗi máy chủ nội bộ
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - tasks
+      summary: Cập nhật một phần thông tin công việc
+      description: Cho phép cập nhật từng trường thông tin riêng biệt của công việc mà không cần gửi toàn bộ payload.
+      operationId: updateTask
+      parameters:
+        - name: taskId
+          in: path
+          description: Mã định danh công việc cần cập nhật
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Các trường cần cập nhật (tất cả các trường đều là tùy chọn)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Cập nhật công việc thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Dữ liệu cập nhật rỗng hoặc trường không hợp lệ
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Không tìm thấy công việc với ID tương ứng
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Lỗi máy chủ nội bộ
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - tasks
+      summary: Xóa một công việc
+      description: Xóa vĩnh viễn công việc khỏi cơ sở dữ liệu.
+      operationId: deleteTask
+      parameters:
+        - name: taskId
+          in: path
+          description: Mã định danh công việc cần xóa
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Xóa công việc thành công (Không có nội dung trả về)
+        '404':
+          description: Không tìm thấy công việc để xóa
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Lỗi máy chủ nội bộ
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    TaskInput:
+      type: object
+      required:
+        - title
+        - status
+        - priority
+        - dueDate
+        - assignedID
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Tiêu đề công việc
+          example: Triển khai xác thực JWT cho API Gateway
+        status:
+          type: string
+          enum: [todo, in_progress, done, cancelled]
+          description: Trạng thái tiến độ thực hiện
+          example: in_progress
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Mức độ ưu tiên của công việc
+          example: high
+        dueDate:
+          type: string
+          format: date
+          description: Hạn chót hoàn thành theo định dạng ISO 8601 (YYYY-MM-DD)
+          example: '2026-03-31'
+        assignedID:
+          type: integer
+          minimum: 1
+          description: ID nhân viên được phân công xử lý công việc
+          example: 101
+
+    TaskUpdate:
+      type: object
+      description: Payload cập nhật một phần. Tất cả các trường đều là tùy chọn.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Tiêu đề cập nhật
+          example: Cập nhật tài liệu OpenAPI hoàn chỉnh
+        status:
+          type: string
+          enum: [todo, in_progress, done, cancelled]
+          description: Trạng thái mới
+          example: done
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Mức độ ưu tiên mới
+          example: urgent
+        dueDate:
+          type: string
+          format: date
+          description: Hạn chót mới (YYYY-MM-DD)
+          example: '2026-04-10'
+        assignedID:
+          type: integer
+          minimum: 1
+          description: ID nhân viên mới được chuyển giao
+          example: 102
+
+    Task:
+      allOf:
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              description: Khóa chính tự sinh của công việc
+              example: 1
+        - $ref: '#/components/schemas/TaskInput'
+
+    TaskList:
+      type: object
+      required:
+        - data
+        - has_more
+      properties:
+        data:
+          type: array
+          description: Mảng danh sách các công việc trong trang hiện tại
+          items:
+            $ref: '#/components/schemas/Task'
+        next_cursor:
+          type: string
+          nullable: true
+          description: Chuỗi con trỏ dùng để truy vấn trang tiếp theo (null nếu là trang cuối)
+          example: eyJzb3J0IjoiaWQiLCJ2YWwiOiIxMCIsImlkIjoxMH0
+        has_more:
+          type: boolean
+          description: Đánh dấu xem còn bản ghi ở trang tiếp theo hay không
+          example: true
+
+    Error:
+      type: object
+      description: Cấu trúc báo lỗi theo chuẩn RFC 7807 (Problem Details for HTTP APIs)
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Đường dẫn URI phân loại loại lỗi
+          example: https://httpstatuses.com/404
+        title:
+          type: string
+          description: Tiêu đề ngắn gọn của lỗi
+          example: Task Not Found
+        status:
+          type: integer
+          description: Mã trạng thái HTTP
+          example: 404
+        detail:
+          type: string
+          description: Thông điệp mô tả chi tiết lỗi dành cho người dùng
+          example: Không tìm thấy công việc với ID = 999.
+        instance:
+          type: string
+          description: Đường dẫn endpoint đã xảy ra lỗi
+          example: /tasks/999
+        trace_id:
+          type: string
+          description: Mã UUID theo dõi request phục vụ debug và log
+          example: 4a25c77c-a49e-4ff6-9b51-3801f9bb9739
