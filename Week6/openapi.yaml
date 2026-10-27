@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: Social Network API
+  version: 1.0.0
+  description: |
+    Spec cho 3 endpoint: đăng nhập, làm mới token, xem bài viết.
+
+    **Quy ước lỗi:** mọi lỗi trả về `application/problem+json` (RFC 7807)
+    kèm trường `code` để client xử lý theo máy.
+
+    **Quy ước scope:**
+    | Endpoint | Xác thực | Scope |
+    |---|---|---|
+    | POST /auth/login | Không (public) | không yêu cầu |
+    | POST /auth/refresh | Refresh token trong body | không yêu cầu access token |
+    | GET /posts/{id} | Bearer access token | `posts:read` |
+servers:
+  - url: https://api.example.com/v1
+
+tags:
+  - name: Auth
+  - name: Posts
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Đăng nhập bằng email + mật khẩu
+      security: []            # endpoint public, không cần scope
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Sai email hoặc mật khẩu (thông báo chung, không tiết lộ email có tồn tại hay không)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                type: https://api.example.com/errors/invalid-credentials
+                title: Invalid credentials
+                status: 401
+                code: INVALID_CREDENTIALS
+        '403':
+          description: Tài khoản bị khóa / vô hiệu hóa / chưa xác minh
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                title: Account unavailable
+                status: 403
+                code: ACCOUNT_LOCKED
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshToken
+      summary: Đổi refresh token lấy cặp token mới (rotation)
+      description: |
+        Mỗi refresh token chỉ dùng **một lần**. Dùng lại token cũ
+        (reuse) bị coi là dấu hiệu bị đánh cắp: toàn bộ chuỗi token của
+        phiên bị thu hồi.
+      security: []            # xác thực bằng refresh token trong body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Cấp cặp token mới
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Refresh token không hợp lệ, hết hạn, đã thu hồi hoặc bị dùng lại
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              examples:
+                expired:
+                  value: { title: Token expired, status: 401, code: REFRESH_TOKEN_EXPIRED }
+                reused:
+                  value: { title: Token reuse detected, status: 401, code: REFRESH_TOKEN_REUSED }
+                invalid:
+                  value: { title: Invalid token, status: 401, code: REFRESH_TOKEN_INVALID }
+        '403':
+          description: Tài khoản đã bị khóa kể từ lúc cấp token
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { title: Account unavailable, status: 403, code: ACCOUNT_LOCKED }
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /posts/{id}:
+    get:
+      tags: [Posts]
+      operationId: getPostById
+      summary: Lấy một bài viết theo id
+      security:
+        - oauth2: [posts:read]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID bài viết (UUID)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Bài viết mà người gọi có quyền xem
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string, example: private, max-age=0 }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '304':
+          description: Không đổi so với `If-None-Match`
+        '400':
+          description: "`id` không phải UUID hợp lệ"
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { title: Invalid id, status: 400, code: INVALID_ID }
+        '401':
+          description: Thiếu, sai định dạng, hết hạn hoặc chữ ký access token không hợp lệ
+          headers:
+            WWW-Authenticate:
+              schema: { type: string, example: 'Bearer error="invalid_token"' }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { title: Unauthorized, status: 401, code: TOKEN_INVALID }
+        '403':
+          description: |
+            Token thiếu scope `posts:read` (`INSUFFICIENT_SCOPE`) hoặc
+            người gọi bị chủ bài viết chặn (`BLOCKED_BY_AUTHOR`).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { title: Forbidden, status: 403, code: INSUFFICIENT_SCOPE }
+        '404':
+          description: |
+            Bài viết không tồn tại, đã xóa, **hoặc** là bài riêng tư/bạn bè
+            mà người gọi không có quyền xem (dùng 404 để không lộ sự tồn tại).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { title: Post not found, status: 404, code: POST_NOT_FOUND }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: JWT access token (Bearer). Scope được kiểm tra ở server, không tin claim từ client.
+      flows:
+        password:
+          tokenUrl: /auth/login
+          refreshUrl: /auth/refresh
+          scopes:
+            posts:read: Đọc bài viết
+            posts:write: Tạo/sửa/xóa bài viết của chính mình
+            profile:read: Đọc hồ sơ cá nhân
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          writeOnly: true
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          writeOnly: true
+    TokenResponse:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Thời hạn access token (giây)
+          example: 900
+        scope:
+          type: string
+          example: posts:read profile:read
+    Post:
+      type: object
+      required: [id, author, content, visibility, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        author:
+          type: object
+          required: [id, display_name]
+          properties:
+            id: { type: string, format: uuid }
+            display_name: { type: string }
+            avatar_url: { type: string, format: uri, nullable: true }
+        content:
+          type: string
+          maxLength: 5000
+        visibility:
+          type: string
+          enum: [public, friends, private]
+        like_count: { type: integer, minimum: 0 }
+        comment_count: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time, nullable: true }
+    Problem:
+      type: object
+      required: [title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          description: Mã lỗi ổn định cho client
+        detail: { type: string }
+        request_id: { type: string }
+
+  responses:
+    BadRequest:
+      description: Body sai định dạng hoặc thiếu trường bắt buộc
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { title: Validation failed, status: 400, code: VALIDATION_ERROR }
+    UnsupportedMediaType:
+      description: Content-Type không phải application/json
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { title: Unsupported media type, status: 415, code: UNSUPPORTED_MEDIA_TYPE }
+    TooManyRequests:
+      description: Vượt giới hạn tần suất
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Số giây cần chờ
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { title: Too many requests, status: 429, code: RATE_LIMITED }
+    InternalError:
+      description: Lỗi máy chủ (không trả stack trace)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { title: Internal error, status: 500, code: INTERNAL_ERROR, request_id: 8f1c2b }
