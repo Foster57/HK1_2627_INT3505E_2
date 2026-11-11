@@ -24,6 +24,7 @@ def client(app):
 @pytest.fixture()
 def sample_book(app):
     with app.app_context():
+        # pyrefly: ignore[unexpected-keyword]
         book = Book(title="API Design Patterns", author="J.J. Geewax", year=2021)
         db.session.add(book)
         db.session.commit()
