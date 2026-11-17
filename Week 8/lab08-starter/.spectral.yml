@@ -1,0 +1,43 @@
+extends: [[spectral:oas, off]]
+
+rules:
+  # Check 1: Mọi endpoint phải có operationId
+  operation-operationId:
+    description: Operation must have an operationId
+    message: "{{error}}"
+    severity: error
+    given: $.paths.*[get,post,put,delete,patch]
+    then:
+      field: operationId
+      function: defined
+
+  # Check 2: Response 204 không được phép có body/content
+  no-body-on-204:
+    description: 204 response must not have content/body
+    message: HTTP 204 response must not define content
+    severity: error
+    given: $.paths.*.*.responses['204']
+    then:
+      field: content
+      function: undefined
+
+  # Check 3: Book.year phải là integer theo model Python
+  book-year-integer:
+    description: Book.year must be integer (matching Python model)
+    message: Book.year must have type integer
+    severity: error
+    given: $.components.schemas.Book.properties.year.type
+    then:
+      function: pattern
+      functionOptions:
+        match: integer
+
+  # Check 4 (Custom rule theo đề bài): Response 200 phải có schema không rỗng
+  response-200-has-schema:
+    description: 200 response must have non-empty schema
+    message: 200 response must define a non-empty schema
+    severity: error
+    given: $.paths.*.*.responses['200'].content.*
+    then:
+      field: schema
+      function: defined

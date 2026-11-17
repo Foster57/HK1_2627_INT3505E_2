@@ -181,6 +181,85 @@
           ]
         }
       ]
+    },
+    {
+      "name": "error-cases",
+      "item": [
+        {
+          "name": "POST /books — missing title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author\": \"Dang Tran Tien\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "books"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Response code is VALIDATION_ERROR\", () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.code).to.eql(\"VALIDATION_ERROR\");",
+                  "  pm.expect(data.message).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /books/9999 — missing id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/9999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "books",
+                "9999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Response code is NOT_FOUND\", () => {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.code).to.eql(\"NOT_FOUND\");",
+                  "  pm.expect(data.message).to.eql(\"Book not found\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
