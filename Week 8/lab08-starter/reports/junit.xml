@@ -1,31 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Books API — Lab08 Starter" tests="7" time="0.093">
-  <testsuite name="books / GET /books — initial list" id="863bb70c-3a6c-412a-a59d-47e958045386" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.022">
-    <testcase name="200 OK" time="0.022" classname="BooksGetBooksInitialList"/>
-    <testcase name="body is array" time="0.022" classname="BooksGetBooksInitialList"/>
+<testsuites name="Books API — Lab08 Starter" tests="7" time="0.000">
+  <testsuite name="books / GET /books — initial list" id="ce3b6bb2-6bf7-4a95-8149-f94cb91a7e7b" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="200 OK" time="0.000" classname="BooksGetBooksInitialList">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / GET /books — initial list.]]>
+        <![CDATA[Test description: 200 OK.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:1).]]>
+      </failure>
+    </testcase>
+    <testcase name="body is array" time="0.000" classname="BooksGetBooksInitialList">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / GET /books — initial list.]]>
+        <![CDATA[Test description: body is array.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:1).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="books / POST /books — create" id="b09b461d-a798-46d0-ae2e-461bd363ebbc" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.019">
-    <testcase name="201 Created" time="0.019" classname="BooksPostBooksCreate"/>
-    <testcase name="positive id" time="0.019" classname="BooksPostBooksCreate"/>
+  <testsuite name="books / POST /books — create" id="667eaaec-5888-4571-bb8a-c9aa67025f7b" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="201 Created" time="0.000" classname="BooksPostBooksCreate">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / POST /books — create.]]>
+        <![CDATA[Test description: 201 Created.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:2).]]>
+      </failure>
+    </testcase>
+    <testcase name="positive id" time="0.000" classname="BooksPostBooksCreate">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / POST /books — create.]]>
+        <![CDATA[Test description: positive id.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:2).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="books / GET /books/{id} — read" id="13923a09-f49a-4977-a1e5-2173ab6773f9" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.008">
-    <testcase name="200 OK" time="0.008" classname="BooksGetBooksIdRead"/>
-    <testcase name="expected fields" time="0.008" classname="BooksGetBooksIdRead"/>
+  <testsuite name="books / GET /books/{id} — read" id="f338363e-3583-4ab8-8b4a-55031020f506" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="200 OK" time="0.000" classname="BooksGetBooksIdRead">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / GET /books/{id} — read.]]>
+        <![CDATA[Test description: 200 OK.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:3).]]>
+      </failure>
+    </testcase>
+    <testcase name="expected fields" time="0.000" classname="BooksGetBooksIdRead">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / GET /books/{id} — read.]]>
+        <![CDATA[Test description: expected fields.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:3).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="books / PUT /books/{id} — replace" id="4f856e49-584f-4ee7-bfad-bf5d655c1ae3" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.018">
-    <testcase name="200 OK" time="0.018" classname="BooksPutBooksIdReplace"/>
-    <testcase name="updated title" time="0.018" classname="BooksPutBooksIdReplace"/>
+  <testsuite name="books / PUT /books/{id} — replace" id="573cb16e-3dcd-4ba4-8fcd-7726eec36015" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="200 OK" time="0.000" classname="BooksPutBooksIdReplace">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / PUT /books/{id} — replace.]]>
+        <![CDATA[Test description: 200 OK.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:4).]]>
+      </failure>
+    </testcase>
+    <testcase name="updated title" time="0.000" classname="BooksPutBooksIdReplace">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / PUT /books/{id} — replace.]]>
+        <![CDATA[Test description: updated title.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:4).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="books / DELETE /books/{id} — delete" id="f878e4e2-4587-4d38-b173-b884ac8614d2" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.016">
-    <testcase name="204 No Content" time="0.016" classname="BooksDeleteBooksIdDelete"/>
-    <testcase name="empty body" time="0.016" classname="BooksDeleteBooksIdDelete"/>
+  <testsuite name="books / DELETE /books/{id} — delete" id="a2e28b86-9ca9-4430-9da8-222885ba27c8" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="204 No Content" time="0.000" classname="BooksDeleteBooksIdDelete">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / DELETE /books/{id} — delete.]]>
+        <![CDATA[Test description: 204 No Content.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:5).]]>
+      </failure>
+    </testcase>
+    <testcase name="empty body" time="0.000" classname="BooksDeleteBooksIdDelete">
+      <failure type="AssertionFailure" message="expected undefined to deeply equal ''">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: books / DELETE /books/{id} — delete.]]>
+        <![CDATA[Test description: empty body.]]>
+        <![CDATA[Error message: expected undefined to deeply equal ''.]]>
+        <![CDATA[Stacktrace: AssertionError: expected undefined to deeply equal ''
+   at Object.eval sandbox-script.js:2:5).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="error-cases / POST /books — missing title" id="380e0065-3e1e-4685-8569-b359d85852a6" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.004">
-    <testcase name="Status is 400 Bad Request" time="0.004" classname="ErrorCasesPostBooksMissingTitle"/>
-    <testcase name="Response code is VALIDATION_ERROR" time="0.004" classname="ErrorCasesPostBooksMissingTitle"/>
+  <testsuite name="error-cases / POST /books — missing title" id="a59036d4-db9f-483c-941c-2a93964a6acc" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="Status is 400 Bad Request" time="0.000" classname="ErrorCasesPostBooksMissingTitle">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: error-cases / POST /books — missing title.]]>
+        <![CDATA[Test description: Status is 400 Bad Request.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:6).]]>
+      </failure>
+    </testcase>
+    <testcase name="Response code is VALIDATION_ERROR" time="0.000" classname="ErrorCasesPostBooksMissingTitle">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: error-cases / POST /books — missing title.]]>
+        <![CDATA[Test description: Response code is VALIDATION_ERROR.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:6).]]>
+      </failure>
+    </testcase>
   </testsuite>
-  <testsuite name="error-cases / GET /books/9999 — missing id" id="27d20d4e-0a81-44a1-be60-b8d66a7c8347" timestamp="2026-11-17T20:05:30.166Z" tests="2" failures="0" errors="0" time="0.006">
-    <testcase name="Status is 404 Not Found" time="0.006" classname="ErrorCasesGetBooks9999MissingId"/>
-    <testcase name="Response code is NOT_FOUND" time="0.006" classname="ErrorCasesGetBooks9999MissingId"/>
+  <testsuite name="error-cases / GET /books/9999 — missing id" id="9c589ed5-78ba-4899-bf3f-1ff42a95dbb0" timestamp="2026-11-17T20:20:09.184Z" tests="2" failures="2" errors="1" time="0.000">
+    <system-err><![CDATA[Iteration: 0
+RequestError: Error: connect ECONNREFUSED 127.0.0.1:5000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+
+---
+]]></system-err>
+    <testcase name="Status is 404 Not Found" time="0.000" classname="ErrorCasesGetBooks9999MissingId">
+      <failure type="AssertionFailure" message="expected PostmanResponse{ …(5) } to have property 'code'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: error-cases / GET /books/9999 — missing id.]]>
+        <![CDATA[Test description: Status is 404 Not Found.]]>
+        <![CDATA[Error message: expected PostmanResponse{ …(5) } to have property 'code'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected PostmanResponse{ …(5) } to have property 'code'
+   at Object.eval sandbox-script.js:1:7).]]>
+      </failure>
+    </testcase>
+    <testcase name="Response code is NOT_FOUND" time="0.000" classname="ErrorCasesGetBooks9999MissingId">
+      <failure type="AssertionFailure" message="&quot;undefined&quot; is not valid JSON">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 2bd947a9-3029-4e47-b1e4-891915ac732b.]]>
+        <![CDATA[Collection name: Books API — Lab08 Starter.]]>
+        <![CDATA[Request name: error-cases / GET /books/9999 — missing id.]]>
+        <![CDATA[Test description: Response code is NOT_FOUND.]]>
+        <![CDATA[Error message: "undefined" is not valid JSON.]]>
+        <![CDATA[Stacktrace: JSONError: "undefined" is not valid JSON
+   at Object.eval sandbox-script.js:2:7).]]>
+      </failure>
+    </testcase>
   </testsuite>
 </testsuites>
