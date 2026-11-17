@@ -1,0 +1,57 @@
+"""Lab 4: Load test Books API với Locust.
+
+Run:
+    locust -f locustfile.py --headless -u 10 -r 2 -t 30s --html reports/A.html
+"""
+import itertools
+import random
+
+# pyrefly: ignore[missing-import]
+from locust import HttpUser, between, task
+
+_counter = itertools.count(1)
+
+
+class BooksUser(HttpUser):
+    host = "http://127.0.0.1:5000"
+    wait_time = between(1, 3)
+
+    @task(3)
+    def list_books(self):
+        self.client.get("/books", name="GET /books")
+
+    @task(2)
+    def read_book(self):
+        book_id = random.randint(1, 50)
+        with self.client.get(
+            f"/books/{book_id}", name="GET /books/{id}", catch_response=True
+        ) as response:
+            # Expected 404 (random id absent) is not an operational failure.
+            if response.status_code in (200, 404):
+                response.success()
+            else:
+                response.failure(f"Unexpected status {response.status_code}")
+
+    @task(1)
+    def create_book(self):
+        unique = next(_counter)
+        self.client.post(
+            "/books",
+            json={"title": f"Load test {unique}", "author": "locust"},
+            name="POST /books",
+        )
+
+    @task(2)
+    def search_by_year(self, year=None):
+        if year is None:
+            year = random.choice([2020, 2021, 2022, 2023])
+        with self.client.get(
+            f"/books?year={year}", name="GET /books?year=[year]", catch_response=True
+        ) as response:
+            # 1% fail rate (giả lập 500)
+            if random.random() < 0.01:
+                response.failure("500 Internal Server Error (simulated)")
+            elif response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"Unexpected status {response.status_code}")

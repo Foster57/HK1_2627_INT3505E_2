@@ -1,7 +1,7 @@
-"""Lab 4 starter: weighted tasks, optional 404, no deliberate server errors.
+"""Lab 4: Load test Books API với Locust.
 
-Run: locust -f performance/locustfile.py --headless -H http://127.0.0.1:5000 \
-         -u 10 -r 2 -t 30s --html reports/A.html
+Run:
+    locust -f locustfile.py --headless -u 10 -r 2 -t 30s --html reports/A.html
 """
 import itertools
 import random
@@ -13,6 +13,7 @@ _counter = itertools.count(1)
 
 
 class BooksUser(HttpUser):
+    host = "http://127.0.0.1:5000"
     wait_time = between(1, 3)
 
     @task(3)
@@ -41,6 +42,16 @@ class BooksUser(HttpUser):
         )
 
     @task(2)
-    def search_by_year(self):
-        year = random.choice([2020, 2021, 2022, 2023])
-        self.client.get(f"/books?year={year}", name="GET /books?year=[year]")
+    def search_by_year(self, year=None):
+        if year is None:
+            year = random.choice([2020, 2021, 2022, 2023])
+        with self.client.get(
+            f"/books?year={year}", name="GET /books?year=[year]", catch_response=True
+        ) as response:
+            # 1% fail rate (giả lập 500)
+            if random.random() < 0.01:
+                response.failure("500 Internal Server Error (simulated)")
+            elif response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"Unexpected status {response.status_code}")
