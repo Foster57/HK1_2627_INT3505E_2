@@ -1,5 +1,6 @@
 """LAB 2 — Contract Testing: OpenAPI validation & Response Verification with jsonschema."""
 from pathlib import Path
+# pyrefly: ignore[missing-import]
 import pytest
 import yaml
 from jsonschema import validate
