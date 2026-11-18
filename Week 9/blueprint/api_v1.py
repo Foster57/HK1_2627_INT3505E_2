@@ -13,3 +13,9 @@ def get(uid):
         "full_name": f"{u['first_name']} {u['last_name']}",
         "email": u["email"],
     }
+
+@bp.after_request
+def add_sunset(resp):
+    resp.headers["Deprecation"] = "true"
+    resp.headers["Sunset"] = "Wed, 31 Dec 2026 23:59:59 GMT"
+    return resp

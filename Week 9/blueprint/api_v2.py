@@ -14,3 +14,10 @@ def get(uid):
         "last_name": u["last_name"],
         "email": u["email"],
     }
+
+@bp.route("", methods=["POST"])
+def create():
+    data = request.get_json()
+    uid = max(USERS) + 1
+    USERS[uid] = {k: data[k] for k in ("first_name", "last_name", "email")}
+    return {"id": uid, **USERS[uid]}, 201
