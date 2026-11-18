@@ -1,0 +1,76 @@
+openapi: 3.0.0
+info:
+  title: User API
+  version: "2.0.0"
+  description: API v2 – phiên bản hiện tại với first_name/last_name tách riêng.
+
+paths:
+  /api/v2/users/{id}:
+    get:
+      summary: Get user (v2)
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserV2"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v2/users:
+    post:
+      summary: Create user (v2)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserV2"
+
+components:
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    NotFound:
+      description: User not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: nf
+
+  schemas:
+    UserV2:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        first_name: { type: string, example: "Văn" }
+        last_name: { type: string, example: "Nguyễn" }
+        email: { type: string, example: "a@vnu.vn" }
+
+    UserInput:
+      type: object
+      required: [first_name, last_name, email]
+      properties:
+        first_name: { type: string }
+        last_name: { type: string }
+        email: { type: string }
